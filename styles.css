@@ -1,0 +1,25 @@
+/* Full-screen map */
+#map { position:absolute; inset:0; z-index:0; }
+body.dragging { user-select:none; }
+#sheet { touch-action:none; }
+
+/* ── pill-bar animation helpers ─────────────────────────── */
+#filters {                       
+    transition: opacity .15s ease, transform .15s ease;
+    touch-action: pan-x;        /* 👈 let the browser handle 1-finger X-pans */
+}
+
+#filters.is-hidden {             /* invisible state */
+    opacity: 0;
+    transform: translateY(0.75rem);   /* slight lift as it fades */
+    pointer-events: none;              /* ignore taps/clicks */
+}
+/* ── utilities for a stealthy horizontal scroller ─────────── */
+.no-scrollbar {
+    -webkit-overflow-scrolling: touch;   /* smooth iOS momentum */
+    scrollbar-width: none;               /* Firefox            */
+    -ms-overflow-style: none;            /* IE / Edge Legacy    */
+}
+.no-scrollbar::-webkit-scrollbar {     /* Chrome / Safari     */
+    display: none;
+}

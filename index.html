@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>First Friday Finder</title>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Full-screen map */
+    #map { position:absolute; inset:0; z-index:0; }
+    body.dragging { user-select:none; }
+    #sheet { touch-action:none; }
+
+    /* ── pill-bar animation helpers ─────────────────────────── */
+    #filters {                       
+      transition: opacity .15s ease, transform .15s ease;
+      touch-action: pan-x;        /* 👈 let the browser handle 1-finger X-pans */
+    }
+
+    #filters.is-hidden {             /* invisible state */
+      opacity: 0;
+      transform: translateY(0.75rem);   /* slight lift as it fades */
+      pointer-events: none;              /* ignore taps/clicks */
+    }
+    /* ── utilities for a stealthy horizontal scroller ─────────── */
+    .no-scrollbar {
+      -webkit-overflow-scrolling: touch;   /* smooth iOS momentum */
+      scrollbar-width: none;               /* Firefox            */
+      -ms-overflow-style: none;            /* IE / Edge Legacy    */
+    }
+    .no-scrollbar::-webkit-scrollbar {     /* Chrome / Safari     */
+      display: none;
+    }
+  </style>
+</head>
+<body class="relative h-screen overflow-hidden">
+  <!-- App Header -->
+  <header class="absolute top-0 left-0 right-0 flex justify-between items-center p-4 bg-white bg-opacity-90 z-20">
+    <h1 class="text-xl font-semibold text-gray-900">First Friday Finder</h1>
+    <span class="text-sm text-gray-600">The Dalles, OR</span>
+  </header>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+
+  <!-- Bottom Sheet -->
+  <!-- 1.  Make #sheet the containing block for absolutely-positioned children -->
+<div id="sheet"
+     class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-lg z-20"
+     style="height:80vh; transform:translateY(75vh); transition:transform .3s ease-in-out; cursor:grab;">
+
+  <!-- 2.  Filter pills: sit at sheet-top, then move up by their own height   -->
+  <div id="filters"
+       class="absolute inset-x-0 -top-12
+                     flex space-x-2 px-4 overflow-x-auto z-30
+                     overflow-x-auto overflow-y-hidden no-scrollbar z-30">
+        <button data-type="category" data-value="food" class="filter-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium whitespace-nowrap">Food</button>
+        <button data-type="category" data-value="wine" class="filter-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium whitespace-nowrap">Wine</button>
+        <button data-type="category" data-value="shopping" class="filter-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium whitespace-nowrap">Shopping</button>
+        <button data-type="distance" data-value="5" class="filter-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium whitespace-nowrap">5m Walk</button>
+        <button data-type="distance" data-value="10" class="filter-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium whitespace-nowrap">10m Walk</button>
+      </div>
+    <!-- Drag Handle -->
+    <div id="handle" class="w-12 h-1 bg-gray-300 rounded mx-auto mt-2 mb-4"></div>
+    <!-- Sheet Content -->
+    <div class="px-4 overflow-y-auto" style="height:calc(80vh - 48px)">
+      <div id="sheetHeader" class="flex justify-between items-center mb-4">
+        <h2 id="sheetTitle" class="text-lg font-semibold text-gray-900">Nearby Events</h2>
+        <button id="clearFilter" class="text-gray-500 text-xl font-bold" style="display:none;">&times;</button>
+      </div>
+      <div id="events" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- Leaflet & App Script -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Sample event data with categories
+    const stores = [
+      { name: 'Gallery One', lat: 45.6025, lng: -121.1922, event: 'Pop-up art show', time: '5–9 PM', category: 'shopping' },
+      { name: 'Brew & Bites', lat: 45.6030, lng: -121.1930, event: 'Live acoustic set', time: '6–8 PM', category: 'food' },
+      { name: 'Book Nook', lat: 45.6018, lng: -121.1915, event: 'Author readings', time: '5–7 PM', category: 'shopping' },
+      { name: 'Vineyard Vibes', lat: 45.6020, lng: -121.1910, event: 'Wine Tasting', time: '5–8 PM', category: 'wine' },
+      { name: 'Corner Cafe', lat: 45.6035, lng: -121.1925, event: 'Coffee & Pastries', time: '5–9 PM', category: 'food' }
+    ];
+    const emojis = { shopping: '🛍️', food: '🍔', wine: '🍷' };
+    let storeMarkers = [];
+    let activeFilter = null;
+    let filterType = null;
+
+    /* bounds that encloses every event */
+    const eventsBounds  = L.latLngBounds(stores.map(s => [s.lat, s.lng]));
+    const eventsCenter  = eventsBounds.getCenter();   // handy later
+
+    function fitToStores(list) {
+      if (!list.length) return;
+
+      const bounds = L.latLngBounds(list.map(s => [s.lat, s.lng]));
+
+      /* how much of the screen does the sheet cover? */
+      const sheetTop    = sheet.getBoundingClientRect().top;        // px from viewport-top
+      const sheetHeight = window.innerHeight - sheetTop;            // px hidden behind sheet
+      const extraPad    = sheetHeight + 40;                         // +40 px breathing room
+
+      map.fitBounds(bounds, {
+        paddingTopLeft:     [0, 40],        // a little space above
+        paddingBottomRight: [0, extraPad]   // big space below ⇒ markers sit higher
+      });
+    }
+
+    // Initialize map
+    const map = L.map('map', { zoomControl:false });
+
+    L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    {
+      attribution:
+        '&copy; <a href="https://carto.com/attributions">CARTO</a> © OpenStreetMap',
+      subdomains: 'abcd',   // Carto serves tiles from a, b, c, d.*
+      maxZoom: 19,
+      tileSize: 256
+    }
+  ).addTo(map);
+
+    // ⬇ Give the map a proper center & zoom before adding anything
+    map.fitBounds(eventsBounds.pad(0.05));   // 5 % padding; tweak to taste
+
+    // Filter Visibility
+    const filtersBar = document.getElementById('filters');
+
+    // Plot markers
+    function plotMarkers(latlng, list) {
+      storeMarkers.forEach(m => m.remove());
+      storeMarkers = [];
+      if (lastLocation) {   // ← only show the “user” circle after GeoLocation fires
+        L.circleMarker(latlng, {
+          radius:6, color:'#2563EB', fill:'#2563EB', fillOpacity:1
+        }).addTo(map);
+      }
+
+      //map.setView(latlng,15);
+      list.forEach((s, i) => {
+        const ll = L.latLng(s.lat, s.lng);
+        const dist = (latlng.distanceTo(ll)/1000).toFixed(2);
+        const icon = L.divIcon({ html:`<div class=\"text-2xl\">${emojis[s.category] || '📍'}</div>`, className:'', iconSize:[30,30], iconAnchor:[15,30], popupAnchor:[0,-30] });
+        const marker = L.marker(ll, {icon}).addTo(map)
+          .bindPopup(`<strong>${s.name}</strong><br>${s.event} (${s.time})<br>${dist} km walk`);
+        storeMarkers.push(marker);
+      });
+    }
+
+    // Render list
+    function renderList(latlng, list) {
+      const container = document.getElementById('events');
+      container.innerHTML = '';
+      list.forEach((s, i) => {
+        const ll = L.latLng(s.lat, s.lng);
+        const mins = Math.round(ll.distanceTo(latlng)/80);
+        const card = document.createElement('div');
+        card.className = 'flex justify-between items-start px-3 py-2 bg-gray-50 rounded-lg shadow-sm cursor-pointer';
+        card.innerHTML = `
+          <div>
+            <div class=\"font-semibold text-gray-900\">${s.event}</div>
+            <div class=\"text-gray-500 text-sm\">${s.name}</div>
+          </div>
+          <div class=\"text-gray-700 font-medium text-sm\">${mins}m walk</div>
+        `;
+        card.addEventListener('click', () => {
+          const marker = storeMarkers[i]; if(marker){ marker.openPopup(); map.panTo([s.lat, s.lng]); }
+        });
+        container.appendChild(card);
+      });
+    }
+
+    // Apply filter and update UI
+    function applyFilter(type, value) {
+      filterType = type;
+      activeFilter = value;
+      const titleEL = document.getElementById('sheetTitle');
+      const clearBtn = document.getElementById('clearFilter');
+      if(type === 'category') {
+        titleEL.textContent = value.charAt(0).toUpperCase() + value.slice(1);
+      } else if(type === 'distance') {
+        titleEL.textContent = `Within ${value}m Walk`;
+      }
+      clearBtn.style.display = 'block';
+      // Hide filter pills
+      filtersBar.classList.add('is-hidden');
+      filterActive = true;
+
+      // if user was collapsed, pop to half so results are visible
+      if (currentTranslate > half) {
+        currentTranslate = half;
+        sheet.style.transition = 'transform .25s ease';
+        sheet.style.transform  = `translateY(${half}px)`;
+      }
+
+      updateListAndMap();
+    }
+
+    // Clear filter
+    document.getElementById('clearFilter').addEventListener('click', () => {
+      activeFilter = null; filterType = null;
+      document.getElementById('sheetTitle').textContent = 'Nearby Events';
+      document.getElementById('clearFilter').style.display = 'none';
+      // Show Filter Bar
+      filtersBar.classList.remove('is-hidden');
+      filterActive = false; 
+      updateListAndMap();
+    });
+
+    // Update list & map with (filtered) events
+    function updateListAndMap() {
+      // Use last known user location or fallback
+      const latlng = lastLocation || eventsCenter;
+      let filtered = stores;
+      if(activeFilter) {
+        if(filterType === 'category') {
+          filtered = stores.filter(s => s.category === activeFilter);
+        } else if(filterType === 'distance') {
+          filtered = stores.filter(s => {
+            const d = latlng.distanceTo(L.latLng(s.lat, s.lng))/80;
+            return d <= parseInt(activeFilter);
+          });
+        }
+      }
+      plotMarkers(latlng, filtered);
+      renderList(latlng, filtered);
+      // ⬇ Center/zoom after rendering
+      fitToStores(activeFilter ? filtered : stores);
+    }
+
+    // Store last location for filters
+    let lastLocation = null;
+    function onLocationFound(e) {
+      lastLocation = e.latlng;
+      updateListAndMap();
+    }
+    function onLocationError() {
+      lastLocation = L.latLng(45.6025, -121.1922);
+      updateListAndMap();
+    }
+    map.on('locationfound', onLocationFound);
+    map.on('locationerror', onLocationError);
+    map.locate({ setView:false, maxZoom:16 });
+
+    // Hook filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        applyFilter(btn.dataset.type, btn.dataset.value);
+      });
+    });
+
+    // Drag logic (touch & mouse)
+    const sheet = document.getElementById('sheet');
+    let startY = 0, currentTranslate = 0;
+    const sheetHeight = sheet.getBoundingClientRect().height;
+    // defining snap points
+    const collapsed = sheetHeight - 96;
+    const half = sheetHeight/2;
+    const expanded = 0;
+
+    /* snap-point helper – only HERE */
+    let filterActive = false;
+    function snaps () {
+      return filterActive ? [half, expanded]
+                           : [collapsed, half, expanded];
+    }
+
+
+    const snapPoints = [collapsed, half, expanded];
+    currentTranslate = collapsed;
+    sheet.style.transform = `translateY(${collapsed}px)`;
+    function getY(e){ return e.touches? e.touches[0].clientY : e.clientY; }
+    function onDragStart(e) {
+      if (e.target.closest('#filters')) return; // 👈 touches on pills → ignore
+      const y = getY(e);
+      const rect = sheet.getBoundingClientRect();
+      if(y - rect.top > 80) return;
+      startY = y;
+      document.body.classList.add('dragging');
+      sheet.style.transition = '';
+      window.addEventListener('mousemove', onDrag);
+      window.addEventListener('touchmove', onDrag, { passive:false });
+      window.addEventListener('mouseup', onDrop);
+      window.addEventListener('touchend', onDrop);
+    }
+    function onDrag(e) {
+      e.preventDefault();
+      const y = getY(e);
+      let next = currentTranslate + (y - startY);
+      next = Math.max(expanded, Math.min(next, collapsed));
+      sheet.style.transform = `translateY(${next}px)`;
+    }
+    function onDrop(e) {
+      const y = e.changedTouches? e.changedTouches[0].clientY : e.clientY;
+      const attempted = currentTranslate + (y - startY);
+      /* use snaps() helper to pick nearest legal snap point */
+      const nearest = snaps().reduce(
+            (p,c) => Math.abs(c - attempted) < Math.abs(p - attempted) ? c : p
+      );
+      currentTranslate = nearest;
+
+      sheet.style.transition = 'transform 0.3s ease-in-out';
+      sheet.style.transform = `translateY(${nearest}px)`;
+      document.body.classList.remove('dragging');
+      window.removeEventListener('mousemove', onDrag);
+      window.removeEventListener('touchmove', onDrag);
+      window.removeEventListener('mouseup', onDrop);
+      window.removeEventListener('touchend', onDrop);
+    }
+    sheet.addEventListener('mousedown', onDragStart);
+    sheet.addEventListener('touchstart', onDragStart, { passive:false });
+  </script>
+</body>
+</html>

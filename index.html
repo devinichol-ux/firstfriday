@@ -51,7 +51,7 @@
   <!-- 1.  Make #sheet the containing block for absolutely-positioned children -->
 <div id="sheet"
      class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-lg z-20"
-     style="height:80vh; transform:translateY(75vh); transition:transform .3s ease-in-out; cursor:grab;">
+     style="height:80vh;">
 
   <!-- 2.  Filter pills: sit at sheet-top, then move up by their own height   -->
   <div id="filters"
@@ -257,7 +257,10 @@
 
     // Drag logic (touch & mouse)
     const sheet = document.getElementById('sheet');
-    let startY = 0, currentTranslate = 0;
+    let startY = 0;                    // pointer Y at drag-start
+    let currentTranslate;              // ← declare, don’t assign yet
+
+
     const sheetHeight = sheet.getBoundingClientRect().height;
     // defining snap points
     const collapsed = sheetHeight - 96;
@@ -271,10 +274,10 @@
                            : [collapsed, half, expanded];
     }
 
+    /* START STATE */
+    currentTranslate = half;                 // ⬅ default position
+    sheet.style.transform = `translateY(${half}px)`;
 
-    const snapPoints = [collapsed, half, expanded];
-    currentTranslate = collapsed;
-    sheet.style.transform = `translateY(${collapsed}px)`;
     function getY(e){ return e.touches? e.touches[0].clientY : e.clientY; }
     function onDragStart(e) {
       if (e.target.closest('#filters')) return; // 👈 touches on pills → ignore

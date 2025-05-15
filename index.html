@@ -4,10 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>First Friday Finder</title>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
   <!-- Style Sheet -->
   <link rel="stylesheet" href="styles.css">
 
@@ -18,21 +25,21 @@
     <h1 class="text-xl font-semibold text-gray-900">First Friday Finder</h1>
     <span class="text-sm text-gray-600">The Dalles, OR</span>
   </header>
-
-  <!-- Map -->
+  <!-- ************************************************ -->
+  <!-- ******************* Map -->
+  <!-- ************************************************ -->
   <div id="map"></div>
 
-  <!-- Bottom Sheet -->
-  <!-- 1.  Make #sheet the containing block for absolutely-positioned children -->
+  <!-- ************************************************ -->
+  <!-- ******************* Sheet -->
+  <!-- ************************************************ -->
 <div id="sheet"
      class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-lg z-20"
      style="height:80vh;">
 
-  <!-- 2.  Filter pills: sit at sheet-top, then move up by their own height   -->
+  <!--  Filter pills: sit at sheet-top, then move up by their own height   -->
   <div id="filters"
-       class="absolute inset-x-0 -top-12
-                     flex space-x-2 px-4 overflow-x-auto z-30
-                     overflow-x-auto overflow-y-hidden no-scrollbar z-30">
+       class="absolute inset-x-0 -top-12 flex space-x-2 px-4 overflow-x-auto z-30 overflow-x-auto overflow-y-hidden no-scrollbar z-30">
         <button data-type="category" data-value="food" class="filter-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium whitespace-nowrap">Food</button>
         <button data-type="category" data-value="wine" class="filter-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium whitespace-nowrap">Wine</button>
         <button data-type="category" data-value="shopping" class="filter-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium whitespace-nowrap">Shopping</button>
@@ -51,9 +58,13 @@
     </div>
   </div>
 
+  <!-- ************************************************ -->
+  <!-- ******************* JS -->
+  <!-- ************************************************ -->
   <!-- Leaflet & App Script -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <!-- JS Page -->
   <script src="app.js"></script>
+
 </body>
 </html>

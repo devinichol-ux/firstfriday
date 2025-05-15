@@ -31,6 +31,29 @@ body.dragging { user-select:none; }
 }
 
 /* ---------------------------------------------------- */
+/* Event Card */
+/* ---------------------------------------------------- */
+.event-card{
+    border-top: 1px solid #E6E6E6;
+    padding: 24px 0px;
+}
+.event-card-title{
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+.event-card-description{
+    font-size: 14px;
+    font-weight: normal;
+}
+.event-card-distance{
+    font-size: 14px;
+    font-weight: normal;
+}
+
+
+
+/* ---------------------------------------------------- */
 /* Filters */
 /* ---------------------------------------------------- */
 

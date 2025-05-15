@@ -80,13 +80,13 @@ function renderList(latlng, list) {
     const ll = L.latLng(s.lat, s.lng);
     const mins = Math.round(ll.distanceTo(latlng)/80);
     const card = document.createElement('div');
-    card.className = 'flex justify-between items-start px-3 py-2 bg-gray-50 rounded-lg shadow-sm cursor-pointer';
+    card.className = 'event-card flex justify-between items-start cursor-pointer';
     card.innerHTML = `
         <div>
-        <div class=\"font-semibold text-gray-900\">${s.event}</div>
-        <div class=\"text-gray-500 text-sm\">${s.name}</div>
+        <div class=\"event-card-title\">${s.event}</div>
+        <div class=\"event-card-description\">${s.name}</div>
         </div>
-        <div class=\"text-gray-700 font-medium text-sm\">${mins}m walk</div>
+        <div class=\"event-card-distance\">${mins}m walk</div>
     `;
     card.addEventListener('click', () => {
         const marker = storeMarkers[i]; if(marker){ marker.openPopup(); map.panTo([s.lat, s.lng]); }

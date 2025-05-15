@@ -39,19 +39,19 @@
 
   <!--  Filter pills: sit at sheet-top, then move up by their own height   -->
   <div id="filters"
-       class="absolute inset-x-0 -top-12 flex space-x-2 px-4 overflow-x-auto z-30 overflow-x-auto overflow-y-hidden no-scrollbar z-30">
-        <button data-type="category" data-value="food" class="filter-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium whitespace-nowrap">Food</button>
-        <button data-type="category" data-value="wine" class="filter-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium whitespace-nowrap">Wine</button>
-        <button data-type="category" data-value="shopping" class="filter-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium whitespace-nowrap">Shopping</button>
-        <button data-type="distance" data-value="5" class="filter-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium whitespace-nowrap">5m Walk</button>
-        <button data-type="distance" data-value="10" class="filter-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium whitespace-nowrap">10m Walk</button>
+       class="filter-container absolute inset-x-0 flex space-x-2 px-4 overflow-x-auto z-30 overflow-x-auto overflow-y-hidden no-scrollbar z-30">
+        <button data-type="category" data-value="food" class="filter-btn bg-white shadow-sm rounded-full whitespace-nowrap">Food</button>
+        <button data-type="category" data-value="wine" class="filter-btn bg-white shadow-sm rounded-full whitespace-nowrap">Wine</button>
+        <button data-type="category" data-value="shopping" class="filter-btn bg-white shadow-sm rounded-full whitespace-nowrap">Shopping</button>
+        <button data-type="distance" data-value="5" class="filter-btn bg-white shadow-sm rounded-full whitespace-nowrap">5m Walk</button>
+        <button data-type="distance" data-value="10" class="filter-btn bg-white shadow-sm rounded-full whitespace-nowrap">10m Walk</button>
       </div>
     <!-- Drag Handle -->
     <div id="handle" class="w-12 h-1 bg-gray-300 rounded mx-auto mt-2 mb-4"></div>
     <!-- Sheet Content -->
     <div class="px-4 overflow-y-auto" style="height:calc(80vh - 48px)">
       <div id="sheetHeader" class="flex justify-between items-center mb-4">
-        <h2 id="sheetTitle" class="text-lg font-semibold text-gray-900">Nearby Events</h2>
+        <h2 id="sheetTitle" class="sheet-title">Nearby Events</h2>
         <button id="clearFilter" class="text-gray-500 text-xl font-bold" style="display:none;">&times;</button>
       </div>
       <div id="events" class="space-y-3"></div>

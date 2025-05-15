@@ -15,16 +15,36 @@ body {
 /* Full-screen map */
 #map { position:absolute; inset:0; z-index:0; }
 body.dragging { user-select:none; }
-#sheet { touch-action:none; }
+
+/* ---------------------------------------------------- */
+/* Sheet */
+/* ---------------------------------------------------- */
+#sheet { 
+    touch-action:none; 
+    border: 1px solid #E6E6E6;
+    padding: 8px 24px;
+}
+
+.sheet-title{
+    font-size: 24px;
+    font-weight: bold;
+}
 
 /* ---------------------------------------------------- */
 /* Filters */
 /* ---------------------------------------------------- */
 
+.filter-btn{
+    border: 1px solid #2C2C54;
+    padding: 8px 16px;
+    font-size: 16px;
+}
+
 /* ── pill-bar animation helpers ──── */
 #filters {                       
     transition: opacity .15s ease, transform .15s ease;
     touch-action: pan-x;        /* 👈 let the browser handle 1-finger X-pans */
+    top: -55px;
 }
 
 #filters.is-hidden {             /* invisible state */

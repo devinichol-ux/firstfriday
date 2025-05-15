@@ -16,6 +16,16 @@ body {
 #map { position:absolute; inset:0; z-index:0; }
 body.dragging { user-select:none; }
 
+/* --- map pin -------------------------------------------------------------- */
+.pin      { position: relative; width:60px; height:60px; transform:translate(-50%,-100%);}
+.pin svg  { width:100%; height:100%; fill:#373c72; }   /* main colour        */
+.pin.dim svg { fill:#9ca3af; }                         /* greyed-out variant */
+
+.pin-icon { position:absolute; top:46%; left:50%;
+            transform:translate(-50%, -60%);           /* center a tad high  */
+            font-size:22px; line-height:1; color:#fff; }
+
+
 /* ---------------------------------------------------- */
 /* Sheet */
 /* ---------------------------------------------------- */

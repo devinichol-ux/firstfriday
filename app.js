@@ -51,6 +51,30 @@ map.fitBounds(eventsBounds.pad(0.05));   // 5 % padding; tweak to taste
 // Filter Visibility
 const filtersBar = document.getElementById('filters');
 
+// emoji (or icon-class) per category
+const pinGlyph = { shopping:'📚', food:'🍔', wine:'🍷', default:'📍' };
+
+/* build a Leaflet <divIcon>  */
+function makePin(category, dim = false){
+  const glyph = pinGlyph[category] || pinGlyph.default;
+  const html  = `
+    <div class="pin ${dim ? 'dim' : ''}">
+      <svg width="38" height="48" viewBox="0 0 38 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="18.5263" cy="18.5263" r="18.5263" fill="#40407A"/>
+<path d="M20.0514 46.093C19.251 47.0768 17.7489 47.0768 16.9485 46.093L5.07655 31.5L31.9233 31.5L20.0514 46.093Z" fill="#40407A"/>
+<circle cx="18.5261" cy="18.5263" r="15.6316" fill="white"/>
+</svg>
+      <span class="pin-icon">${glyph}</span>
+    </div>`;
+  return L.divIcon({
+    html,
+    className:'',            // we style purely via the html above
+    iconSize:[40,40],
+    iconAnchor:[20,40],      // point of the pin
+    popupAnchor:[0,-40]
+  });
+}
+
 // Plot markers
 function plotMarkers(latlng, list) {
     storeMarkers.forEach(m => m.remove());
@@ -65,7 +89,9 @@ function plotMarkers(latlng, list) {
     list.forEach((s, i) => {
     const ll = L.latLng(s.lat, s.lng);
     const dist = (latlng.distanceTo(ll)/1000).toFixed(2);
-    const icon = L.divIcon({ html:`<div class=\"text-2xl\">${emojis[s.category] || '📍'}</div>`, className:'', iconSize:[30,30], iconAnchor:[15,30], popupAnchor:[0,-30] });
+    // grey-out pins that don’t match an active *category* filter
+    const dim = activeFilter && filterType === 'category' && s.category !== activeFilter;
+    const icon = makePin(s.category, dim);
     const marker = L.marker(ll, {icon}).addTo(map)
         .bindPopup(`<strong>${s.name}</strong><br>${s.event} (${s.time})<br>${dist} km walk`);
     storeMarkers.push(marker);

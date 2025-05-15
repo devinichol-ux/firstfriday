@@ -11,6 +11,24 @@ let storeMarkers = [];
 let activeFilter = null;
 let filterType = null;
 
+// track which pin is “active”
+let selectedMarker = null;     
+
+function highlight(marker){
+  // 1. clear previous
+  if (selectedMarker && selectedMarker._icon){
+    selectedMarker._icon.querySelector('.pin')
+                        .classList.remove('selected');
+  }
+
+  // 2. set new
+  selectedMarker = marker;
+  if (marker && marker._icon){
+    marker._icon.querySelector('.pin')
+                .classList.add('selected');
+  }
+}
+
 /* bounds that encloses every event */
 const eventsBounds  = L.latLngBounds(stores.map(s => [s.lat, s.lng]));
 const eventsCenter  = eventsBounds.getCenter();   // handy later
@@ -95,6 +113,9 @@ function plotMarkers(latlng, list) {
     const marker = L.marker(ll, {icon}).addTo(map)
         .bindPopup(`<strong>${s.name}</strong><br>${s.event} (${s.time})<br>${dist} km walk`);
     storeMarkers.push(marker);
+    // highlight when user taps the pin *or* its list-card
+    marker.on('click', () => highlight(marker));
+    storeMarkers.push(marker);
     });
 }
 
@@ -115,7 +136,7 @@ function renderList(latlng, list) {
         <div class=\"event-card-distance\">${mins}m walk</div>
     `;
     card.addEventListener('click', () => {
-        const marker = storeMarkers[i]; if(marker){ marker.openPopup(); map.panTo([s.lat, s.lng]); }
+        const marker = storeMarkers[i]; if(marker){ highlight(marker); marker.openPopup(); map.panTo([s.lat, s.lng]); }
     });
     container.appendChild(card);
     });

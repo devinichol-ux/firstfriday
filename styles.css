@@ -20,6 +20,11 @@ body.dragging { user-select:none; }
 .pin      { position: relative; width:60px; height:60px; transform:translate(-50%,-100%);}
 .pin svg  { width:100%; height:100%; fill:#373c72; }   /* main colour        */
 .pin.dim svg { fill:#9ca3af; }                         /* greyed-out variant */
+/* grow the whole pin (SVG + glyph) */
+.pin.selected{
+  transform:translate(-50%, -100%) scale(1.5);  /* keep tip in same place */
+  z-index: 1000;                                /* stays on top */
+}
 
 .pin-icon { position:absolute; top:46%; left:50%;
             transform:translate(-50%, -60%);           /* center a tad high  */

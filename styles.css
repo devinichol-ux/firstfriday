@@ -1,9 +1,17 @@
+/* ---------------------------------------------------- */
+/* Map Stuff */
+/* ---------------------------------------------------- */
+
 /* Full-screen map */
 #map { position:absolute; inset:0; z-index:0; }
 body.dragging { user-select:none; }
 #sheet { touch-action:none; }
 
-/* ── pill-bar animation helpers ─────────────────────────── */
+/* ---------------------------------------------------- */
+/* Filters */
+/* ---------------------------------------------------- */
+
+/* ── pill-bar animation helpers ──── */
 #filters {                       
     transition: opacity .15s ease, transform .15s ease;
     touch-action: pan-x;        /* 👈 let the browser handle 1-finger X-pans */
@@ -23,3 +31,7 @@ body.dragging { user-select:none; }
 .no-scrollbar::-webkit-scrollbar {     /* Chrome / Safari     */
     display: none;
 }
+
+/* ---------------------------------------------------- */
+/* NEXT THING */
+/* ---------------------------------------------------- */

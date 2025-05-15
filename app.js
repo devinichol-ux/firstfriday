@@ -29,6 +29,15 @@ function highlight(marker){
   }
 }
 
+// Clear highlihgt when clicked away
+function clearHighlight(){
+  if (selectedMarker && selectedMarker._icon){
+    selectedMarker._icon.querySelector('.pin')
+                        .classList.remove('selected');
+    selectedMarker = null;
+  }
+}
+
 /* bounds that encloses every event */
 const eventsBounds  = L.latLngBounds(stores.map(s => [s.lat, s.lng]));
 const eventsCenter  = eventsBounds.getCenter();   // handy later
@@ -65,6 +74,9 @@ L.tileLayer(
 
 // ⬇ Give the map a proper center & zoom before adding anything
 map.fitBounds(eventsBounds.pad(0.05));   // 5 % padding; tweak to taste
+
+// Clear any highlighted pins
+map.on('click', clearHighlight);
 
 // Filter Visibility
 const filtersBar = document.getElementById('filters');
@@ -114,8 +126,10 @@ function plotMarkers(latlng, list) {
         .bindPopup(`<strong>${s.name}</strong><br>${s.event} (${s.time})<br>${dist} km walk`);
     storeMarkers.push(marker);
     // highlight when user taps the pin *or* its list-card
-    marker.on('click', () => highlight(marker));
-    storeMarkers.push(marker);
+    marker.on('click', e => {
+  L.DomEvent.stopPropagation(e);          // ← keep map from clearing us
+  highlight(marker);
+});
     });
 }
 

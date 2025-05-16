@@ -66,6 +66,15 @@ body.dragging { user-select:none; }
     font-weight: normal;
 }
 
+/* ---------------------------------------------------- */
+/* Event detial page */
+/* ---------------------------------------------------- */
+#eventDetail {
+  padding: 0px;        /* same side-padding as list */
+}
+#eventDetail h3   { font-size:1.25rem; font-weight:600; }
+#eventDetail time { color:#047857; font-weight:500; }  /* teal “open until …” */
+#eventDetail p    { margin: .5rem 0 1.5rem; }
 
 
 /* ---------------------------------------------------- */

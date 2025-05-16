@@ -10,18 +10,18 @@ const emojis = { shopping: '🛍️', food: '🍔', wine: '🍷' };
 let storeMarkers = [];
 let activeFilter = null;
 let filterType = null;
+let detailActive = false;   
 
 // track which pin is “active”
-let selectedMarker = null;     
+/* ----------  pin highlighting  ---------- */
+let selectedMarker = null;
 
 function highlight(marker){
-  // 1. clear previous
+  /* remove old highlight */
   if (selectedMarker && selectedMarker._icon){
     selectedMarker._icon.querySelector('.pin')
                         .classList.remove('selected');
   }
-
-  // 2. set new
   selectedMarker = marker;
   if (marker && marker._icon){
     marker._icon.querySelector('.pin')
@@ -29,13 +29,79 @@ function highlight(marker){
   }
 }
 
-// Clear highlihgt when clicked away
-function clearHighlight(){
+/* ----------  clear everything  ---------- */
+function clearHighlight() {
+  console.log("clearHighlight called");
   if (selectedMarker && selectedMarker._icon){
-    selectedMarker._icon.querySelector('.pin')
-                        .classList.remove('selected');
+    selectedMarker._icon.querySelector('.pin').classList.remove('selected');
     selectedMarker = null;
   }
+  if (detailActive){                   
+    console.log("hideDetail called");
+    hideDetail();                      
+  }
+}
+
+
+// Event Detial show hide.
+const listBox   = document.getElementById('events');
+const detailBox = document.getElementById('eventDetail');
+const closeBtn  = document.getElementById('detailClose')  // we’ll add it below
+const sheetHeader = document.getElementById('sheetHeader');
+
+function showDetail(store){
+detailActive = true; 
+
+  sheetHeader.classList.add('hidden');   // 👈 hide “Nearby Events”
+  filtersBar.classList.add('is-hidden'); // 🔹 hide filter pills
+  /* populate markup */
+  detailBox.innerHTML = `
+    <div class="flex justify-between items-start mb-2">
+      <h3>${store.event}</h3>
+      <button id="detailClose" class="text-2xl font-bold text-gray-400">&times;</button>
+    </div>
+    <time>Open until ${store.time.split('–')[1]}</time>
+    <p>${store.name}</p>
+    <!-- placeholders for imgs … -->
+    <div class="grid grid-cols-2 gap-4">
+      <div class="bg-gray-200 rounded h-32"></div>
+      <div class="bg-gray-200 rounded h-32"></div>
+      <div class="bg-gray-200 rounded h-20"></div>
+      <div class="bg-gray-200 rounded h-20"></div>
+    </div>
+  `;
+
+  /* UI swap */
+  listBox.classList.add('hidden');
+  detailBox.classList.remove('hidden');
+
+  /* expand sheet */
+  currentTranslate = half;
+  sheet.style.transition = 'transform .25s ease';
+  sheet.style.transform = `translateY(${half}px)`;
+
+  /* hook close handler */
+  detailBox.querySelector('#detailClose')
+           .addEventListener('click', hideDetail, { once:true });
+}
+
+function hideDetail(){
+  // Remove highlight from selected pin when detail closes
+  if (selectedMarker && selectedMarker._icon) {
+    selectedMarker._icon.querySelector('.pin').classList.remove('selected');
+    selectedMarker = null;  // Optionally clear the selected marker reference
+  }
+
+  detailActive = false;
+  sheetHeader.classList.remove('hidden');
+  if (!filterActive) filtersBar.classList.remove('is-hidden');
+
+  detailBox.classList.add('hidden');
+  listBox.classList.remove('hidden');
+
+  currentTranslate = half;
+  sheet.style.transition = 'transform .25s ease';
+  sheet.style.transform  = `translateY(${half}px)`;
 }
 
 /* bounds that encloses every event */
@@ -122,9 +188,16 @@ function plotMarkers(latlng, list) {
     // grey-out pins that don’t match an active *category* filter
     const dim = activeFilter && filterType === 'category' && s.category !== activeFilter;
     const icon = makePin(s.category, dim);
-    const marker = L.marker(ll, {icon}).addTo(map)
-        .bindPopup(`<strong>${s.name}</strong><br>${s.event} (${s.time})<br>${dist} km walk`);
+
+    // Marker creation block
+   const marker = L.marker(ll, { icon }).addTo(map);
+   marker.on('click', e => {
+        L.DomEvent.stopPropagation(e);   // so map-click doesn’t clear highlight
+        highlight(marker);
+        showDetail(s);
+    });
     storeMarkers.push(marker);
+
     // highlight when user taps the pin *or* its list-card
     marker.on('click', e => {
   L.DomEvent.stopPropagation(e);          // ← keep map from clearing us
@@ -150,7 +223,7 @@ function renderList(latlng, list) {
         <div class=\"event-card-distance\">${mins}m walk</div>
     `;
     card.addEventListener('click', () => {
-        const marker = storeMarkers[i]; if(marker){ highlight(marker); marker.openPopup(); map.panTo([s.lat, s.lng]); }
+        const marker = storeMarkers[i]; if(marker){ highlight(marker); showDetail(s); map.panTo([s.lat, s.lng]); }
     });
     container.appendChild(card);
     });
@@ -224,6 +297,7 @@ function onLocationError() {
     lastLocation = L.latLng(45.6025, -121.1922);
     updateListAndMap();
 }
+map.on('click', clearHighlight);     // 🆕  blank-map tap = deselect + hide card
 map.on('locationfound', onLocationFound);
 map.on('locationerror', onLocationError);
 map.locate({ setView:false, maxZoom:16 });

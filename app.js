@@ -155,12 +155,14 @@ function makePin(category, dim = false){
   const glyph = pinGlyph[category] || pinGlyph.default;
   const html  = `
     <div class="pin ${dim ? 'dim' : ''}">
+        <div class="pin-inner">
       <svg width="38" height="48" viewBox="0 0 38 48" fill="none" xmlns="http://www.w3.org/2000/svg">
 <circle cx="18.5263" cy="18.5263" r="18.5263" fill="#40407A"/>
 <path d="M20.0514 46.093C19.251 47.0768 17.7489 47.0768 16.9485 46.093L5.07655 31.5L31.9233 31.5L20.0514 46.093Z" fill="#40407A"/>
 <circle cx="18.5261" cy="18.5263" r="15.6316" fill="white"/>
 </svg>
       <span class="pin-icon">${glyph}</span>
+      </div>
     </div>`;
   return L.divIcon({
     html,

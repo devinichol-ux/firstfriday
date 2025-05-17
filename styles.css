@@ -21,7 +21,7 @@ body.dragging { user-select:none; }
 .pin-inner { width:100%; height:100%; transform-origin: 50% 100%; }
 
 .pin.selected .pin-inner {
-  animation: zingIn 0.35s cubic-bezier(.68,-.55,.27,1.55) forwards,
+  animation: zingIn 0.25s cubic-bezier(.68,-.55,.27,1.55) forwards,
              sway   1.2s ease-in-out 0.25s 2   alternate forwards;
 }
 .pin svg  { width:100%; height:100%; fill:#373c72; }   /* main colour        */

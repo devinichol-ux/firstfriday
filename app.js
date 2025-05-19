@@ -1,4 +1,4 @@
-  // Sample event data with categories
+// Sample event data with categories
 const stores = [
     { name: 'Gallery One', lat: 45.6025, lng: -121.1922, event: 'Pop-up art show', time: '5–9 PM', category: 'shopping' },
     { name: 'Brew & Bites', lat: 45.6030, lng: -121.1930, event: 'Live acoustic set', time: '6–8 PM', category: 'food' },
@@ -146,6 +146,9 @@ map.on('click', clearHighlight);
 
 // Filter Visibility
 const filtersBar = document.getElementById('filters');
+
+const sheet = document.getElementById('sheet');
+const scrollArea = document.getElementById('sheetScroll'); // scrollable list inside the sheet
 
 // emoji (or icon-class) per category
 const pinGlyph = { shopping:'📚', food:'🍔', wine:'🍷', default:'📍' };
@@ -312,7 +315,6 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 });
 
 // Drag logic (touch & mouse)
-const sheet = document.getElementById('sheet');
 let startY = 0;                    // pointer Y at drag-start
 let currentTranslate;              // ← declare, don’t assign yet
 
@@ -338,9 +340,8 @@ function getY(e){ return e.touches? e.touches[0].clientY : e.clientY; }
 function onDragStart(e) {
     if (e.target.closest('#filters')) return; // 👈 touches on pills → ignore
     const y = getY(e);
-    const rect = sheet.getBoundingClientRect();
-    if(y - rect.top > 80) return;
     startY = y;
+    scrollArea.style.overflowY = 'hidden';   // lock list scrolling while dragging
     document.body.classList.add('dragging');
     sheet.style.transition = '';
     window.addEventListener('mousemove', onDrag);
@@ -366,6 +367,7 @@ function onDrop(e) {
 
     sheet.style.transition = 'transform 0.3s ease-in-out';
     sheet.style.transform = `translateY(${nearest}px)`;
+    scrollArea.style.overflowY = '';         // restore list scrolling
     document.body.classList.remove('dragging');
     window.removeEventListener('mousemove', onDrag);
     window.removeEventListener('touchmove', onDrag);

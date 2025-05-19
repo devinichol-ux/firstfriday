@@ -4,7 +4,12 @@ const stores = [
     { name: 'Brew & Bites', lat: 45.6030, lng: -121.1930, event: 'Live acoustic set', time: '6–8 PM', category: 'food' },
     { name: 'Book Nook', lat: 45.6018, lng: -121.1915, event: 'Author readings', time: '5–7 PM', category: 'shopping' },
     { name: 'Vineyard Vibes', lat: 45.6020, lng: -121.1910, event: 'Wine Tasting', time: '5–8 PM', category: 'wine' },
-    { name: 'Corner Cafe', lat: 45.6035, lng: -121.1925, event: 'Coffee & Pastries', time: '5–9 PM', category: 'food' }
+    { name: 'Corner Cafe', lat: 45.6035, lng: -121.1925, event: 'Coffee & Pastries', time: '5–9 PM', category: 'food' },
+    { name: 'Riverfront Grill', lat: 45.6027, lng: -121.1905, event: 'BBQ & Brews',            time: '6–9 PM', category: 'food' },
+    { name: 'The Dalles Brewery', lat: 45.6032, lng: -121.1940, event: 'Tap Takeover',         time: '5–10 PM', category: 'wine' },
+    { name: 'Craft Co‑Op',       lat: 45.6013, lng: -121.1920, event: 'Local Makers Market',   time: '5–8 PM',  category: 'shopping' },
+    { name: 'Sunset Cellars',    lat: 45.6022, lng: -121.1902, event: 'Rosé Release Party',    time: '5–8 PM',  category: 'wine' },
+    { name: 'Street Eats',       lat: 45.6038, lng: -121.1912, event: 'Food Truck Fiesta',     time: '5–9 PM',  category: 'food' }
 ];
 const emojis = { shopping: '🛍️', food: '🍔', wine: '🍷' };
 let storeMarkers = [];

@@ -61,6 +61,22 @@ body.dragging { user-select:none; }
     font-weight: bold;
 }
 
+/* In your styles.css file */
+#sheetScroll {
+  -webkit-overflow-scrolling: touch; /* For smooth iOS momentum scrolling */
+  overscroll-behavior: contain;     /* Prevents scroll chaining */
+  touch-action: none;               /* Add this line */
+  /* Other existing styles for #sheetScroll if any */
+}
+
+#sheetHeader {
+  /* These make the header sticky within its scrolling parent (#sheetScroll) */
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 1; /* Ensure it's above #events content during scroll */
+}
+
 /* ---------------------------------------------------- */
 /* Event Card */
 /* ---------------------------------------------------- */

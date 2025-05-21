@@ -15,7 +15,10 @@ const emojis = { shopping: '🛍️', food: '🍔', wine: '🍷' };
 let storeMarkers = [];
 let activeFilter = null;
 let filterType = null;
-let detailActive = false;   
+let detailActive = false;  
+let filterActive = false;    // put this under the other let declarations
+const handle = document.getElementById('handle'); // Ensure this line exists in your script
+
 
 // track which pin is “active”
 /* ----------  pin highlighting  ---------- */
@@ -84,6 +87,7 @@ detailActive = true;
   currentTranslate = half;
   sheet.style.transition = 'transform .25s ease';
   sheet.style.transform = `translateY(${half}px)`;
+  snapTo(currentTranslate); 
 
   /* hook close handler */
   detailBox.querySelector('#detailClose')
@@ -319,65 +323,170 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     });
 });
 
-// Drag logic (touch & mouse)
-let startY = 0;                    // pointer Y at drag-start
-let currentTranslate;              // ← declare, don’t assign yet
-
-
+/* ---------- bottom-sheet drag (pointer events) ---------- */
 const sheetHeight = sheet.getBoundingClientRect().height;
-// defining snap points
-const collapsed = sheetHeight - 96;
-const half = sheetHeight/2;
-const expanded = 0;
+const collapsed   = sheetHeight - 96;      // 96 px peeking
+const half        = sheetHeight / 2;
+const expanded    = 0;
 
-/* snap-point helper – only HERE */
-let filterActive = false;
-function snaps () {
-    return filterActive ? [half, expanded]
-                        : [collapsed, half, expanded];
+let currentTranslate = half;
+sheet.style.transform = `translateY(${currentTranslate}px)`;
+
+/* lock list scroll until sheet is fully open */
+scrollArea.style.overflowY = 'hidden';
+scrollArea.style.touchAction = 'none';
+
+/* helpers */
+const getY = e => (e.touches ? e.touches[0].clientY : e.clientY);
+let startY = 0, draggingSheet = false;
+// let pointerYAtScrollTopZero = null; // Stores pointer Y when scroll hits top during a downward swipe
+let dragEffectiveStartY = 0;     // Add this
+let dragInitialSheetY = 0;       // Add this
+let sheetWasExpandedAndAtScrollTopOnPointerDown = false;
+const SCROLL_TOP_BUFFER = 25; // Or any other value you prefer
+let touchStartedOnEffectiveHandle = false; // Renamed flag
+const EFFECTIVE_HANDLE_HEIGHT = 40; // Draggable area from the top of the sheet in pixels
+
+
+function snaps() {
+  return filterActive ? [half, expanded]     // when a filter is active
+                      : [collapsed, half, expanded];
+}
+function snapTo(val) {
+  currentTranslate = val;
+  sheet.style.transition = 'transform .3s ease';
+  sheet.style.transform = `translateY(${val}px)`;
+  const isContentScrollable = scrollArea.scrollHeight > scrollArea.clientHeight;
+
+  if (val === expanded && isContentScrollable) {
+    scrollArea.style.overflowY = 'auto';
+    scrollArea.style.touchAction = 'pan-y'; // READY for native content scroll
+  } else {
+    scrollArea.style.overflowY = 'hidden';
+    scrollArea.style.touchAction = 'none';  // Sheet drag or no scroll
+  }
 }
 
-/* START STATE */
-currentTranslate = half;                 // ⬅ default position
-sheet.style.transform = `translateY(${half}px)`;
 
-function getY(e){ return e.touches? e.touches[0].clientY : e.clientY; }
-function onDragStart(e) {
-    if (e.target.closest('#filters')) return; // 👈 touches on pills → ignore
-    const y = getY(e);
-    startY = y;
-    scrollArea.style.overflowY = 'hidden';   // lock list scrolling while dragging
-    document.body.classList.add('dragging');
+
+function onPointerDown(e) {
+  if (e.target.closest('#filters')) return; // Ignore taps on filter pills
+
+  startY = getY(e); // getY(e) returns e.clientY
+  draggingSheet = false;
+  touchStartedOnEffectiveHandle = false; // Reset the flag at the start of every touch
+
+  if (currentTranslate === expanded) { // Only apply this logic if the sheet is fully expanded
+    const sheetRect = sheet.getBoundingClientRect();
+    // Check if the pointerdown Y-coordinate is within the top EFFECTIVE_HANDLE_HEIGHT of the sheet
+    if (startY >= sheetRect.top && startY <= sheetRect.top + EFFECTIVE_HANDLE_HEIGHT) {
+      touchStartedOnEffectiveHandle = true;
+    }
+  }
+  // If the sheet is not expanded (i.e., collapsed or half),
+  // touchStartedOnEffectiveHandle remains false. The onPointerMove logic for these states
+  // allows dragging from anywhere on the sheet, so this flag isn't needed for them.
+}
+
+// From your app.js
+// Ensure EFFECTIVE_HANDLE_HEIGHT, expanded, currentTranslate, startY,
+// draggingSheet, dragEffectiveStartY, dragInitialSheetY,
+// touchStartedOnEffectiveHandle, sheet, scrollArea, and getY are defined in the accessible scope.
+
+function onPointerMove(e) {
+  const currentPointerY = getY(e);
+  const overallDy = currentPointerY - startY;
+
+  if (!draggingSheet) { // If we haven't already decided this gesture is a sheet drag
+    let decisionToDragSheet = false;
+    // Default drag baselines; these are used if a drag is initiated.
+    let currentSegmentDragEffectiveStartY = startY;
+    let currentSegmentDragInitialSheetY = currentTranslate;
+
+    const sheetIsExpanded = (currentTranslate === expanded);
+
+    if (sheetIsExpanded) {
+      // --- Scenario A: Sheet is EXPANDED ---
+      if (touchStartedOnEffectiveHandle) {
+        // Gesture started on the "effective handle" (top 50px).
+        // This gesture is reserved for sheet dragging. Prevent browser defaults IMMEDIATELY.
+        e.preventDefault();
+        scrollArea.style.touchAction = 'none';
+        scrollArea.style.overflowY = 'hidden'; // Prevent native scroll/overscroll effects
+
+        if (Math.abs(overallDy) > 6) { // Threshold for significant movement to actually drag
+          decisionToDragSheet = true;
+          // drag baselines (currentSegmentDragEffectiveStartY, currentSegmentDragInitialSheetY)
+          // are already correctly set to startY and currentTranslate (which is 'expanded').
+        }
+        // If movement is minor (<=6px), decisionToDragSheet remains false, sheet doesn't move.
+        // Browser default actions have already been prevented.
+      } else {
+        // Gesture started on content area (below effective handle) when sheet is expanded.
+        // This is purely for content scrolling.
+        return; // EXIT EARLY to allow native content scroll (relies on snapTo setting pan-y)
+      }
+    } else {
+      // --- Scenario B: Sheet is COLLAPSED or HALF ---
+      // Any significant swipe anywhere on the sheet will drag it.
+      if (Math.abs(overallDy) > 6) {
+        decisionToDragSheet = true;
+        // drag baselines are startY and currentTranslate.
+        // For these states, snapTo should have already set touchAction='none' and overflowY='hidden'.
+        // We can re-affirm and prevent default to be absolutely sure.
+        e.preventDefault();
+        if(scrollArea.style.touchAction !== 'none') scrollArea.style.touchAction = 'none';
+        if(scrollArea.style.overflowY !== 'hidden') scrollArea.style.overflowY = 'hidden';
+      }
+    }
+
+    // If a decision was made to drag the sheet in any scenario:
+    if (decisionToDragSheet) {
+      draggingSheet = true;
+      dragEffectiveStartY = currentSegmentDragEffectiveStartY;
+      dragInitialSheetY = currentSegmentDragInitialSheetY;
+
+      sheet.setPointerCapture(e.pointerId);
+      // Styles (overflowY, touchAction) for scrollArea are set in the specific condition blocks above.
+      // e.preventDefault() was also called in those blocks.
+    }
+    // If no decision to drag AND we haven't returned (e.g., minor move on effective handle when expanded,
+    // or minor move on collapsed/half sheet):
+    // We do nothing this frame and wait for more movement.
+    // For the "expanded effective handle" case, default browser actions are already prevented.
+  }
+
+  // If actively dragging the sheet:
+  if (draggingSheet) {
+    e.preventDefault(); // This is the main preventDefault for active dragging.
+    const dyForSheetMovement = currentPointerY - dragEffectiveStartY;
+    let nextSheetY = dragInitialSheetY + dyForSheetMovement;
+
+    nextSheetY = Math.max(expanded, Math.min(nextSheetY, collapsed));
     sheet.style.transition = '';
-    window.addEventListener('mousemove', onDrag);
-    window.addEventListener('touchmove', onDrag, { passive:false });
-    window.addEventListener('mouseup', onDrop);
-    window.addEventListener('touchend', onDrop);
+    sheet.style.transform = `translateY(${nextSheetY}px)`;
+  }
 }
-function onDrag(e) {
-    e.preventDefault();
-    const y = getY(e);
-    let next = currentTranslate + (y - startY);
-    next = Math.max(expanded, Math.min(next, collapsed));
-    sheet.style.transform = `translateY(${next}px)`;
-}
-function onDrop(e) {
-    const y = e.changedTouches? e.changedTouches[0].clientY : e.clientY;
-    const attempted = currentTranslate + (y - startY);
-    /* use snaps() helper to pick nearest legal snap point */
-    const nearest = snaps().reduce(
-        (p,c) => Math.abs(c - attempted) < Math.abs(p - attempted) ? c : p
-    );
-    currentTranslate = nearest;
 
-    sheet.style.transition = 'transform 0.3s ease-in-out';
-    sheet.style.transform = `translateY(${nearest}px)`;
-    scrollArea.style.overflowY = '';         // restore list scrolling
-    document.body.classList.remove('dragging');
-    window.removeEventListener('mousemove', onDrag);
-    window.removeEventListener('touchmove', onDrag);
-    window.removeEventListener('mouseup', onDrop);
-    window.removeEventListener('touchend', onDrop);
+function onPointerUp(e) {
+  if (draggingSheet) {
+    const currentPointerY = getY(e);
+    const dyForSheetMovement = currentPointerY - dragEffectiveStartY;
+    const attempted = dragInitialSheetY + dyForSheetMovement;
+
+    const nearest = snaps().reduce(
+      (p, c) => Math.abs(c - attempted) < Math.abs(p - attempted) ? c : p
+    );
+    snapTo(nearest);
+    draggingSheet = false;
+  } else {
+    // If no drag occurred, ensure snapTo correctly sets styles,
+    // especially if touchAction/overflowY were changed but no drag happened.
+    snapTo(currentTranslate);
+  }
+  touchStartedOnEffectiveHandle = false; // Reset the new flag
 }
-sheet.addEventListener('mousedown', onDragStart);
-sheet.addEventListener('touchstart', onDragStart, { passive:false });
+
+sheet.addEventListener('pointerdown', onPointerDown);
+sheet.addEventListener('pointermove', onPointerMove);
+sheet.addEventListener('pointerup',   onPointerUp);

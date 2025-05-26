@@ -51,7 +51,7 @@ body.dragging { user-select:none; }
 /* Sheet */
 /* ---------------------------------------------------- */
 #sheet { 
-    touch-action:none; 
+    touch-action: pan-y;
     border: 1px solid #E6E6E6;
     padding: 8px 24px;
 }

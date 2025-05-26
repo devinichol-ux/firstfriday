@@ -4,8 +4,18 @@ const stores = [
     { name: 'Brew & Bites', lat: 45.6030, lng: -121.1930, event: 'Live acoustic set', time: '6–8 PM', category: 'food' },
     { name: 'Book Nook', lat: 45.6018, lng: -121.1915, event: 'Author readings', time: '5–7 PM', category: 'shopping' },
     { name: 'Vineyard Vibes', lat: 45.6020, lng: -121.1910, event: 'Wine Tasting', time: '5–8 PM', category: 'wine' },
-    { name: 'Corner Cafe', lat: 45.6035, lng: -121.1925, event: 'Coffee & Pastries', time: '5–9 PM', category: 'food' }
-];
+    { name: 'Corner Cafe', lat: 45.6035, lng: -121.1925, event: 'Coffee & Pastries', time: '5–9 PM', category: 'food' },
+    { name: 'Sunshine Mill',         lat: 45.6040, lng: -121.1890, event: 'Indie film screening',          time: '9 – 11 PM', category: 'entertainment' },
+    { name: 'Riverfront Records',    lat: 45.6012, lng: -121.1933, event: 'Vinyl swap & DJ set',          time: '6 – 10 PM', category: 'music' },
+    { name: 'Sweet Tooth Bakery',    lat: 45.6022, lng: -121.1908, event: 'Cupcake-decorating bar',       time: '5 – 8 PM',  category: 'food' },
+    { name: 'Crafty Corner',         lat: 45.6031, lng: -121.1918, event: 'DIY art workshop',             time: '5 – 8 PM',  category: 'art' },
+    { name: 'Columbia Roasters',     lat: 45.6028, lng: -121.1929, event: 'Coffee-roasting demo',         time: '5 – 7 PM',  category: 'food' },
+    { name: 'Hidden Treasures',      lat: 45.6015, lng: -121.1902, event: 'Vintage street market',        time: '5 – 9 PM',  category: 'shopping' },
+    { name: 'Downtown Brewery',      lat: 45.6037, lng: -121.1938, event: 'Small-batch release party',    time: '6 – 9 PM',  category: 'drink' },
+    { name: 'Park Stage',            lat: 45.6010, lng: -121.1927, event: 'Open-air concert',             time: '7 – 9 PM',  category: 'music' },
+    { name: 'Kids Zone @ City Park', lat: 45.6005, lng: -121.1935, event: 'Face painting & games',        time: '5 – 8 PM',  category: 'kids' },
+    { name: 'Mountain Gear',         lat: 45.6029, lng: -121.1945, event: 'Outdoor-gear raffle',          time: '5 – 7 PM',  category: 'shopping' }
+    ];
 const emojis = { shopping: '🛍️', food: '🍔', wine: '🍷' };
 let storeMarkers = [];
 let activeFilter = null;

@@ -35,6 +35,18 @@ body.dragging { user-select:none; }
             transform:translate(-50%, -60%);           /* center a tad high  */
             font-size:22px; line-height:1; color:#fff; }
 
+.marker-label{
+  color:#2C2C54;
+  -webkit-text-stroke-width:0.5px;
+  -webkit-text-stroke-color:#FEFEFE;
+  font-family:Inter;
+  font-size:12px;
+  font-style:normal;
+  font-weight:700;
+  line-height:normal;
+  text-align:center;
+  margin-top:4px;
+}
 
 @keyframes zingIn {
   0%   { transform: scale(1);}

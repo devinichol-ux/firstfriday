@@ -73,12 +73,7 @@ detailActive = true;
     <time>Open until ${store.time.split('–')[1]}</time>
     <p>${store.name}</p>
     <!-- placeholders for imgs … -->
-    <div class="grid grid-cols-2 gap-4">
-      <div class="bg-gray-200 rounded h-32"></div>
-      <div class="bg-gray-200 rounded h-32"></div>
-      <div class="bg-gray-200 rounded h-20"></div>
-      <div class="bg-gray-200 rounded h-20"></div>
-    </div>
+    <p>description of event goes here</p>
   `;
 
   /* UI swap */
@@ -161,7 +156,8 @@ const filtersBar = document.getElementById('filters');
 const pinGlyph = { shopping:'📚', food:'🍔', wine:'🍷', default:'📍' };
 
 /* build a Leaflet <divIcon>  */
-function makePin(category, dim = false){
+function makePin(store, dim = false){
+  const category = store.category;
   const glyph = pinGlyph[category] || pinGlyph.default;
   const html  = `
     <div class="pin ${dim ? 'dim' : ''}">
@@ -173,7 +169,10 @@ function makePin(category, dim = false){
 </svg>
       <span class="pin-icon">${glyph}</span>
       </div>
-    </div>`;
+      <div class="marker-label text-center">${store.name}</div>
+    </div>
+    
+    `;
   return L.divIcon({
     html,
     className:'',            // we style purely via the html above
@@ -187,34 +186,30 @@ function makePin(category, dim = false){
 function plotMarkers(latlng, list) {
     storeMarkers.forEach(m => m.remove());
     storeMarkers = [];
-    if (lastLocation) {   // ← only show the “user” circle after GeoLocation fires
-    L.circleMarker(latlng, {
+    if (lastLocation) {
+      L.circleMarker(latlng, {
         radius:6, color:'#2563EB', fill:'#2563EB', fillOpacity:1
-    }).addTo(map);
+      }).addTo(map);
     }
 
-    //map.setView(latlng,15);
     list.forEach((s, i) => {
-    const ll = L.latLng(s.lat, s.lng);
-    const dist = (latlng.distanceTo(ll)/1000).toFixed(2);
-    // grey-out pins that don’t match an active *category* filter
-    const dim = activeFilter && filterType === 'category' && s.category !== activeFilter;
-    const icon = makePin(s.category, dim);
+      const ll = L.latLng(s.lat, s.lng);
+      const dist = (latlng.distanceTo(ll)/1000).toFixed(2);
+      const dim = activeFilter && filterType === 'category' && s.category !== activeFilter;
+      const icon = makePin(s, dim);
 
-    // Marker creation block
-   const marker = L.marker(ll, { icon }).addTo(map);
-   marker.on('click', e => {
-        L.DomEvent.stopPropagation(e);   // so map-click doesn’t clear highlight
+      const marker = L.marker(ll, { icon }).addTo(map);
+      marker.on('click', e => {
+        L.DomEvent.stopPropagation(e);
         highlight(marker);
         showDetail(s);
-    });
-    storeMarkers.push(marker);
+      });
+      storeMarkers.push(marker);
 
-    // highlight when user taps the pin *or* its list-card
-    marker.on('click', e => {
-  L.DomEvent.stopPropagation(e);          // ← keep map from clearing us
-  highlight(marker);
-});
+      marker.on('click', e => {
+        L.DomEvent.stopPropagation(e);
+        highlight(marker);
+      });
     });
 }
 
